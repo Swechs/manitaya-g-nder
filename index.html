@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Çok Tatlısın — Kaçan Buton</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ff6b6b;--muted:#9aa8bf}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{background:linear-gradient(180deg,#071021 0%, #071a2b 60%);display:flex;align-items:center;justify-content:center;color:#e6eef8}
+    .card{width:min(760px,92vw);min-height:320px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:18px;padding:36px;box-shadow:0 8px 30px rgba(2,6,23,0.6);display:grid;grid-template-rows:auto 1fr;gap:18px;align-items:start;position:relative}
+    .title{font-size:clamp(24px,4vw,36px);font-weight:700;text-align:center}
+    .subtitle{color:var(--muted);text-align:center;font-size:clamp(14px,2.2vw,18px);min-height:28px}
+    .center{display:flex;align-items:center;justify-content:center;height:140px}
+    .controls{display:flex;gap:18px;justify-content:center}
+    button{padding:12px 20px;border-radius:12px;border:0;font-weight:600;cursor:pointer;user-select:none}
+    .yes{background:linear-gradient(90deg,#7ce6a9,#3ecf8e);color:#072214}
+    .no{background:linear-gradient(90deg,#ff9aa2,#ff6b6b);color:#2a0707;position:relative}
+    .hint{position:absolute;right:18px;bottom:14px;color:var(--muted);font-size:12px}
+    /* make the container area where button can move */
+    .arena{position:relative;height:120px}
+    /* subtle transition so it looks smooth */
+    .moving{transition:transform 220ms cubic-bezier(.2,.9,.3,1), left 220ms, top 220ms}
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div>
+      <div class="title" id="title">çok tatlısın</div>
+      <div class="subtitle" id="subtitle">evet öyleyim — ya da hayır?</div>
+    </div>
+
+    <div class="center">
+      <div style="width:100%">
+        <div class="arena" id="arena">
+          <div class="controls" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;justify-content:center;gap:30px;pointer-events:none">
+            <button id="yes" class="yes moving" style="pointer-events:auto">Evet</button>
+            <button id="no" class="no moving" style="pointer-events:auto">Hayır</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="hint">Buton "Hayır" yaklaştıkça kaçar — yakala bakalım!</div>
+      <div style="font-size:13px;color:var(--muted)">Örnek: Sadık Tükel</div>
+    </div>
+  </div>
+
+  <script>
+    // Ayarlar
+    const arena = document.getElementById('arena');
+    const btnNo = document.getElementById('no');
+    const btnYes = document.getElementById('yes');
+    const title = document.getElementById('title');
+    const subtitle = document.getElementById('subtitle');
+
+    // Mesaj dizileri
+    const mainTexts = ['çok tatlısın', 'sen tam bir güneşsin', 'Kalbin çok güzel', 'bunu söylemeyi seviyorum'];
+    const subTexts = ['evet öyleyim', 'bunu duymak güzel', 'biraz utanıyorum ama...','başka bir şey söyleyeyim mi?'];
+
+    // Buton kaçma davranışı için eşiği (px)
+    const THRESHOLD = 120; // yakınlık eşiği
+    let avoidEnabled = true;
+    let moveCooldown = false; // çok sık kaçmasın diye
+
+    // arena içindeki hareket sınırlarını hesapla
+    function getBounds() {
+      return arena.getBoundingClientRect();
+    }
+
+    // butonu rastgele bir noktaya taşı
+    function moveButtonToRandom() {
+      const b = getBounds();
+      const btnRect = btnNo.getBoundingClientRect();
+      const maxX = b.width - btnRect.width - 8;
+      const maxY = b.height - btnRect.height - 8;
+      const x = Math.max(8, Math.floor(Math.random() * maxX));
+      const y = Math.max(8, Math.floor(Math.random() * maxY));
+      // transform yerine left/top kullanmak daha stabil pozisyon.
+      btnNo.style.position = 'absolute';
+      btnNo.style.left = x + 'px';
+      btnNo.style.top = y + 'px';
+      // kısa süreli soğuma
+      moveCooldown = true;
+      setTimeout(()=> moveCooldown = false, 300);
+    }
+
+    // mousemove sırasında kaçma kontrolü
+    window.addEventListener('mousemove', (e) => {
+      if (!avoidEnabled || moveCooldown) return;
+      const b = getBounds();
+      const btnRect = btnNo.getBoundingClientRect();
+      // butonun merkezini hesapla (sayfa koordinatlarına göre)
+      const btnCenterX = btnRect.left + btnRect.width / 2;
+      const btnCenterY = btnRect.top + btnRect.height / 2;
+      const dx = e.clientX - btnCenterX;
+      const dy = e.clientY - btnCenterY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < THRESHOLD) {
+        // kaçma yönünü tercihli yap: tıklandığı yöne ters
+        moveButtonToRandom();
+        // mesajları değiştirelim (kısa tepki)
+        subtitle.textContent = 'bida düşün...';
+        // hafif titreşim efekti
+        btnNo.animate([{transform:'scale(1)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:300});
+      }
+    });
+
+    // eğer kullanıcı 'Hayır' butonuna tıklarsa (nadiren yakalanır)
+    btnNo.addEventListener('click', (e) => {
+      // buton yakalanmış gibi davran
+      avoidEnabled = false;
+      subtitle.textContent = 'tamam, bir daha düşün :)';
+      title.textContent = 'heh yakaladın mı?';
+      // küçük görsel ödül
+      btnNo.disabled = true;
+      btnNo.style.transform = 'scale(1.03)';
+      setTimeout(()=>{
+        // tekrar başa dön
+        title.textContent = mainTexts[Math.floor(Math.random()*mainTexts.length)];
+        subtitle.textContent = subTexts[Math.floor(Math.random()*subTexts.length)];
+        btnNo.disabled = false;
+        avoidEnabled = true;
+      }, 1500);
+    });
+
+    // 'Evet' butonuna basılınca özel bir mesaj göster
+    btnYes.addEventListener('click', () => {
+      // metinleri değiştir
+      title.textContent = 'teşekkür ederim 🥰';
+      subtitle.textContent = 'çok tatlısın!';
+      // butonları devre dışı bırak
+      btnYes.disabled = true; btnNo.disabled = true;
+      // küçük animasyon
+      btnYes.animate([{transform:'translateY(0)'},{transform:'translateY(-6px)'},{transform:'translateY(0)'}],{duration:500});
+      setTimeout(()=>{
+        // tekrar rastgele ana metinlere dön
+        title.textContent = mainTexts[Math.floor(Math.random()*mainTexts.length)];
+        subtitle.textContent = subTexts[Math.floor(Math.random()*subTexts.length)];
+        btnYes.disabled = false; btnNo.disabled = false;
+      },2000);
+    });
+
+    // pencere yeniden boyutlandırıldığında butonu ortalayalım
+    function centerButtons(){
+      // temizle
+      btnNo.style.position = '';
+      btnNo.style.left = '';
+      btnNo.style.top = '';
+      // controls wrapper otomatik ortalıyor
+    }
+    window.addEventListener('resize', centerButtons);
+
+    // Başlangıçta küçük bir rastgelelik
+    setTimeout(()=>{
+      subtitle.textContent = subTexts[0];
+    },200);
+
+  </script>
+</body>
+</html>
