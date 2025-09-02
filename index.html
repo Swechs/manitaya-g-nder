@@ -1,57 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tatlısın Oyunu</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Çok Tatlısın — Kaçan Buton (Önceki Hal)</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #ffe6f2;
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    h1 {
-      color: #d63384;
-      font-size: 1.8rem;
-      margin-bottom: 2rem;
-    }
-    .btn-container {
-      display: flex;
-      gap: 20px;
-      position: relative;
-    }
-    button {
-      padding: 1rem 2rem;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    #yesBtn {
-      background: #ff69b4;
-      color: white;
-    }
-    #noBtn {
-      background: #ccc;
-      color: black;
-      position: absolute;
-    }
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.4rem;
-      }
-      button {
-        font-size: 1rem;
-        padding: 0.8rem 1.5rem;
-      }
-    }
+    body {font-family: Arial, sans-serif; text-align:center; background:#ffe6f2; margin:0; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh;}
+    h1 {color:#d63384; font-size:1.8rem; margin-bottom:2rem;}
+    .btn-container {display:flex; gap:20px; position:relative;}
+    button {padding:1rem 2rem; border:none; border-radius:12px; font-size:1.2rem; cursor:pointer; transition:all 0.3s;}
+    #yesBtn {background:#ff69b4; color:white;}
+    #noBtn {background:#ccc; color:black; position:relative;}
+    @media (max-width:600px){h1{font-size:1.4rem;} button{font-size:1rem; padding:0.8rem 1.5rem;}}
   </style>
 </head>
 <body>
@@ -60,52 +20,35 @@
     <button id="yesBtn">Evet</button>
     <button id="noBtn">Hayır</button>
   </div>
-
   <script>
     const text = document.getElementById("text");
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
-    const container = document.querySelector(".btn-container");
-
-    const messages = [
-      "Bence bir daha düşün 😏",
-      "Gerçekten mi? 🙄",
-      "Tatlı olduğunu kabul et 😍",
-      "Hadi ama, kaçamazsın 😅",
-    ];
-
+    const messages = ["Bence bir daha düşün 😏","Gerçekten mi? 🙄","Tatlı olduğunu kabul et 😍","Hadi ama, kaçamazsın 😅"];
     let msgIndex = 0;
 
-    yesBtn.addEventListener("click", () => {
+    yesBtn.addEventListener("click", ()=>{
       text.innerText = "Teşekkür ederim 🥰 Çok tatlısın!";
       yesBtn.style.display = "none";
       noBtn.style.display = "none";
     });
 
-    // Hem fare hem dokunma için
-    function moveNoBtn() {
-      const containerRect = container.getBoundingClientRect();
+    function moveNoBtn(){
+      const containerRect = document.querySelector('.btn-container').getBoundingClientRect();
       const btnRect = noBtn.getBoundingClientRect();
-
       const maxX = containerRect.width - btnRect.width;
       const maxY = containerRect.height - btnRect.height;
-
-      const randX = Math.floor(Math.random() * maxX);
-      const randY = Math.floor(Math.random() * maxY);
-
-      noBtn.style.left = randX + "px";
-      noBtn.style.top = randY + "px";
-
+      const randX = Math.floor(Math.random()*maxX);
+      const randY = Math.floor(Math.random()*maxY);
+      noBtn.style.position = 'absolute';
+      noBtn.style.left = randX+'px';
+      noBtn.style.top = randY+'px';
       text.innerText = messages[msgIndex % messages.length];
       msgIndex++;
     }
 
-    // Dokunma ve fare üstüne gelince kaçsın
-    noBtn.addEventListener("mouseenter", moveNoBtn);
-    noBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      moveNoBtn();
-    });
+    noBtn.addEventListener('mouseenter', moveNoBtn);
+    noBtn.addEventListener('touchstart',(e)=>{e.preventDefault(); moveNoBtn();});
   </script>
 </body>
 </html>
